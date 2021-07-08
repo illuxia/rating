@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Songs list{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                {% for song in songs %}
+
+                    <div class="card">
+                        <h5 class="card-header">{{ song.title }}</h5>
+                        <div class="card-body">
+                            <form method="post" action="{{ path('rate') }}">
+                                <input type="hidden" name="id" value="{{ song.id }}">
+                                <input type="hidden" name="token" id="token" value="{{ csrf_token('rate_song') }}"/>
+                                {% if song.songRatings is empty %}
+
+                                    <p class="card-text">Rating: Unrated</p>
+                                    <p class="card-text">Total Votes: 0</p>
+                                    {% if app.user %}
+                                        <select class="rating_id" name="grade" required>
+                                            {% for rating in ratings %}
+                                                <option value="{{rating.id}}">{{rating.grade}}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input class="submit-button" type="submit" value="Vote">
+                                    {% endif%}
+                                {% else %}
+                                    {% set sumratings = 0 %}
+                                    {% set ratingCount = 0 %}
+                                    {% set isRatedByUser = false %}
+                                    {% for item in song.songRatings %}
+                                        {% set sumratings = sumratings + item.rating.grade %}
+                                        {% set ratingCount = ratingCount + item.rating|length %}
+                                        {% if app.user %}
+                                            {% if item.user.id == app.user.id %}
+                                                {% set isRatedByUser = true %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <p class="card-text">Rating: {{  (sumratings / ratingCount) | round(1, 'floor') }}</p>
+                                    <p class="card-text">Total Votes: {{ ratingCount }}</p>
+
+                                    {% if isRatedByUser == false and app.user %}
+                                        <select class="rating_id" name="grade" required>
+                                            {% for rating in ratings %}
+                                                <option value="{{rating.id}}">{{rating.grade}}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input class="submit-button" type="submit" value="Vote">
+                                    {% endif %}
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
